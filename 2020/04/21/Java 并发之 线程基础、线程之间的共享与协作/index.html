@@ -1,0 +1,394 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <!--Setting-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta name="apple-mobile-web-app-capable" content="Colin&#39;s Blog">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no,email=no,adress=no">
+    <meta name="browsermode" content="application">
+    <meta name="screen-orientation" content="portrait">
+    <meta name="theme-version" content="1.2.3">
+    <meta name="root" content="/">
+    <link rel="dns-prefetch" href="http://linco.com">
+    <!--SEO-->
+
+<meta name="keywords" content="博客,后端,Java并发编程" />
+
+
+<meta name="description" content="什么是进程和线程进程进程是程序运行资源分配的最小单位。进程是一个在内存中运行的应用程序。每个进程都有自己独立的一块内存空间，一个进程可以有多个线程，比如在Windows系统中，一个运行的xx.e..." />
+
+
+<meta name="robots" content="all" />
+<meta name="google" content="all" />
+<meta name="googlebot" content="all" />
+<meta name="verify" content="all" />
+    <!--Title-->
+
+<title>
+    
+    Java并发 之 线程基础、线程之间的共享与协作 |
+    
+    Colin&#39;s Blog
+</title>
+
+<link rel="alternate" href="/atom.xml" title="Colin&#39;s Blog" type="application/atom+xml">
+
+
+<link rel="icon" href="/favicon.ico">
+
+    
+
+
+<link rel="stylesheet" href="/css/bootstrap.min.css?rev=3.3.7.css">
+<link rel="stylesheet" href="/css/font-awesome.min.css?rev=4.7.0.css">
+<link rel="stylesheet" href="/css/style.css?rev=@@hash.css">
+
+    
+<div class="hide">
+    <script type="text/javascript">
+    var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+    document.write(unescape("%3Cspan class='cnzz_stat_icon_1263868967 hide' %3E%3Cscript%20src%3D%22https%3A%2F%2Fs95.cnzz.com%2Fz_stat.php%3Fweb_id%3D1272564536%22%3E%3C%2Fscript%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s19.cnzz.com/z_stat.php%3Fid%3D1263868967%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+</div>
+
+
+
+
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<!--[if lte IE 8]>
+<style>
+    html{ font-size: 1em }
+</style>
+<![endif]-->
+<!--[if lte IE 9]>
+<div style="ie">你使用的浏览器版本过低，为了你更好的阅读体验，请更新浏览器的版本或者使用其他现代浏览器，比如Chrome、Firefox、Safari等。</div>
+<![endif]-->
+<body>
+    <header class="main-header"  style="background-image:url(
+    http://snippet.shenliyang.com/img/banner.jpg)"
+     >
+    <div class="main-header-box">
+        <a class="header-avatar" href="/" title='Colin Lin'>
+            <img src="/img/avatar.jpg" alt="logo头像" class="img-responsive center-block">
+        </a>
+        <div class="branding">
+            <!--<h2 class="text-hide">Snippet主题,从未如此简单有趣</h2>-->
+            
+            <h2>
+                感恩遇见，欢喜同行
+            </h2>
+            
+        </div>
+    </div>
+</header>
+    <nav class="main-navigation">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="navbar-header"><span class="nav-toggle-button collapsed pull-right" data-toggle="collapse" data-target="#main-menu" id="mnav">
+                        <span class="sr-only"></span>
+                        <i class="fa fa-bars"></i>
+                    </span>
+                    <a class="navbar-brand" href="http://linco.com">
+                        Colin&#39;s Blog</a>
+                </div>
+                <div class="collapse navbar-collapse" id="main-menu">
+                    <ul class="menu">
+                        
+                        <li role="presentation" class="text-center">
+                            <a href="/"><i class="fa "></i>
+                                首页</a>
+                        </li>
+                        
+                        <li role="presentation" class="text-center">
+                            <a href="/categories/前端/"><i class="fa "></i>
+                                前端</a>
+                        </li>
+                        
+                        <li role="presentation" class="text-center">
+                            <a href="/categories/后端/"><i class="fa "></i>
+                                后端</a>
+                        </li>
+                        
+                        <li role="presentation" class="text-center">
+                            <a href="/categories/Linux/"><i class="fa "></i>
+                                Linux</a>
+                        </li>
+                        
+                        <li role="presentation" class="text-center">
+                            <a href="/archives/"><i class="fa "></i>
+                                时间轴</a>
+                        </li>
+                        
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+    <section class="content-wrap">
+        <div class="container">
+            <div class="row">
+                <main class="col-md-8 main-content m-post">
+                    <p id="process"></p>
+<article class="post">
+    <div class="post-head">
+        <h1 id="Java并发 之 线程基础、线程之间的共享与协作">
+            
+            Java并发 之 线程基础、线程之间的共享与协作
+            
+        </h1>
+        <div class="post-meta">
+    
+    <span class="categories-meta fa-wrap">
+        <i class="fa fa-folder-open-o"></i>
+        <a class="category-link" href="/categories/%E5%90%8E%E7%AB%AF/">后端</a>
+    </span>
+    
+    
+    <span class="fa-wrap">
+        <i class="fa fa-tags"></i>
+        <span class="tags-meta">
+            
+            <a class="tag-link" href="/tags/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" rel="tag">Java并发编程</a> <a class="tag-link" href="/tags/%E5%8D%9A%E5%AE%A2/" rel="tag">博客</a> <a class="tag-link" href="/tags/%E5%90%8E%E7%AB%AF/" rel="tag">后端</a>
+            
+        </span>
+    </span>
+    
+    
+    
+    <span class="fa-wrap">
+        <i class="fa fa-clock-o"></i>
+        <span class="date-meta">
+            2020/04/21</span>
+    </span>
+    
+    <span class="fa-wrap">
+        <i class="fa fa-eye"></i>
+        <span id="busuanzi_value_page_pv"></span>
+    </span>
+    
+    
+</div>
+        
+        
+    </div>
+    
+    <div class="post-body post-content">
+        <h2 id="什么是进程和线程"><a href="#什么是进程和线程" class="headerlink" title="什么是进程和线程"></a>什么是进程和线程</h2><h3 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h3><p>进程是程序运行资源分配的最小单位。<br>进程是一个在内存中运行的应用程序。每个进程都有自己独立的一块内存空间，一个进程可以有多个线程，比如在Windows系统中，一个运行的xx.exe就是一个进程。</p>
+<h3 id="线程"><a href="#线程" class="headerlink" title="线程"></a>线程</h3><p>线程是CPU 调度的最小单位,必须依赖于进程而存在。<br>线程是进程中的一个执行任务（控制单元），负责当前进程中程序的执行。一个进程至少有一个线程，一个进程可以运行多个线程，多个线程可共享数据。</p>
+<h3 id="进程与线程的区别"><a href="#进程与线程的区别" class="headerlink" title="进程与线程的区别"></a>进程与线程的区别</h3><p>线程具有许多传统进程所具有的特征，故又称为轻型进程(Light—Weight Process)或进程元；而把传统的进程称为重型进程(Heavy—Weight Process)，它相当于只有一个线程的任务。在引入了线程的操作系统中，通常一个进程都有若干个线程，至少包含一个线程。</p>
+<p><strong>根本区别：</strong> 进程是操作系统资源分配的基本单位，而线程是处理器任务调度和执行的基本单位</p>
+<p><strong>资源开销：</strong> 每个进程都有独立的代码和数据空间（程序上下文），程序之间的切换会有较大的开销；线程可以看做轻量级的进程，同一类线程共享代码和数据空间，每个线程都有自己独立的运行栈和程序计数器（PC），线程之间切换的开销小。</p>
+<p><strong>包含关系：</strong> 如果一个进程内有多个线程，则执行过程不是一条线的，而是多条线（线程）共同完成的；线程是进程的一部分，所以线程也被称为轻权进程或者轻量级进程。</p>
+<p><strong>内存分配：</strong> 同一进程的线程共享本进程的地址空间和资源，而进程之间的地址空间和资源是相互独立的</p>
+<p><strong>影响关系：</strong> 一个进程崩溃后，在保护模式下不会对其他进程产生影响，但是一个线程崩溃整个进程都死掉。所以多进程要比多线程健壮。</p>
+<p><strong>执行过程：</strong> 每个独立的进程有程序运行的入口、顺序执行序列和程序出口。但是线程不能独立执行，必须依存在应用程序中，由应用程序提供多个线程执行控制，两者均可并发执行</p>
+<h2 id="澄清并行和并发"><a href="#澄清并行和并发" class="headerlink" title="澄清并行和并发"></a>澄清并行和并发</h2><h3 id="并发："><a href="#并发：" class="headerlink" title="并发："></a>并发：</h3><p>指应用能够<strong>交替</strong>执行不同的任务,比如：多个任务在同一个 CPU 核上，按细分的时间片轮流(交替)执行，从逻辑上来看那些任务是同时执行。</p>
+<h3 id="并行："><a href="#并行：" class="headerlink" title="并行："></a>并行：</h3><p>指应用能够<strong>同时</strong>执行不同的任务，即：单位时间内，多个处理器或多核处理器同时处理多个任务，是真正意义上的“同时进行”。</p>
+<h3 id="串行："><a href="#串行：" class="headerlink" title="串行："></a>串行：</h3><p>有n个任务，由一个线程按顺序执行。由于任务、方法都在一个线程执行所以不存在线程不安全情况，也就不存在临界区的问题。</p>
+<h3 id="并发和并行两者区别："><a href="#并发和并行两者区别：" class="headerlink" title="并发和并行两者区别："></a>并发和并行两者区别：</h3><p>一个是交替执行,一个是同时执行.</p>
+<p><em>做一个形象的比喻：</em></p>
+<p>并发 = 两个队列和一台咖啡机。</p>
+<p>并行 = 两个队列和两台咖啡机。</p>
+<p>串行 = 一个队列和一台咖啡机。</p>
+<p><img src="/images/%E5%B9%B6%E5%8F%911.png" alt="并发-并行"></p>
+<h2 id="高并发编程的意义、好处和注意事项"><a href="#高并发编程的意义、好处和注意事项" class="headerlink" title="高并发编程的意义、好处和注意事项"></a>高并发编程的意义、好处和注意事项</h2><p>由于多核多线程的CPU 的诞生,多线程、高并发的编程越来越受重视和关注。<br>多线程可以给程序带来如下好处。<br><strong>(1)充分利用CPU 的资源</strong><br>现在市面上没有CPU 的内核不使用多线<br>程并发机制的,特别是服务器还不止一个CPU,如果还是使用单线程的技术做思路,<br>明显就out 了。因为程序的基本调度单元是线程,并且一个线程也只能在一个CPU<br>的一个核的一个线程跑,如果你是个i3 的CPU 的话,最差也是双核心4 线程的运算<br>能力:如果是一个线程的程序的话,那是要浪费3/4 的CPU 性能:如果设计一个多线<br>程的程序的话,那它就可以同时在多个CPU 的多个核的多个线程上跑,可以充分地<br>利用CPU,减少CPU 的空闲时间,发挥它的运算能力,提高并发量。<br>就像我们平时坐地铁一样,很多人坐长线地铁的时候都在认真看书,而不是为<br>了坐地铁而坐地铁,到家了再去看书,这样你的时间就相当于有了两倍。这就是为<br>什么有些人时间很充裕,而有些人老是说没时间的一个原因,工作也是这样,有的<br>时候可以并发地去做几件事情,充分利用我们的时间,CPU 也是一样,也要充分利用。<br><strong>(2)加快响应用户的时间</strong><br>比如我们经常用的迅雷下载,都喜欢多开几个线程去下载,谁都不愿意用一个<br>线程去下载,为什么呢?答案很简单,就是多个线程下载快啊。<br>我们在做程序开发的时候更应该如此,特别是我们做互联网项目,网页的响应<br>时间若提升1s,如果流量大的话,就能增加不少转换量。做过高性能web 前端调优<br>的都知道,要将静态资源地址用两三个子域名去加载,为什么?因为每多一个子域<br>名,浏览器在加载你的页面的时候就会多开几个线程去加载你的页面资源,提升网<br>站的响应速度。多线程,高并发真的是无处不在。<br><strong>(3)可以使你的代码模块化,异步化,简单化</strong><br>例如我们实现电商系统，下订单和给用户发送短信、邮件就可以进行拆分，<br>将给用户发送短信、邮件这两个步骤独立为单独的模块，并交给其他线程去执行。<br>这样既增加了异步的操作，提升了系统性能，又使程序模块化,清晰化和简单化。<br>多线程应用开发的好处还有很多,可以开发中慢慢体<br>会它的魅力。</p>
+<p>总结：</p>
+<ul>
+<li>充分利用多核CPU的计算能力：通过并发编程的形式可以将多核CPU的计算能力发挥到极致，性能得到提升</li>
+<li>方便进行业务拆分，提升系统并发能力和性能：在特殊的业务场景下，先天的就适合于并发编程。现在的系统动不动就要求百万级甚至千万级的并发量，而多线程并发编程正是开发高并发系统的基础，利用好多线程机制可以大大提高系统整体的并发能力以及性能。面对复杂业务模型，并行程序会比串行程序更适应业务需求，而并发编程更能吻合这种业务拆分 。</li>
+</ul>
+<h3 id="并发编程的缺点："><a href="#并发编程的缺点：" class="headerlink" title="并发编程的缺点："></a>并发编程的缺点：</h3><p>并发编程的目的就是为了能提高程序的执行效率，提高程序运行速度，但是并发编程并不总是能提高程序运行速度的，而且并发编程可能会遇到很多问题，比如<strong>：内存泄漏、上下文切换、线程安全、死锁</strong>等问题</p>
+<h3 id="多线程程序需要注意事项"><a href="#多线程程序需要注意事项" class="headerlink" title="多线程程序需要注意事项"></a>多线程程序需要注意事项</h3><p><strong>(1)线程之间的安全性</strong><br>同一个进程里面的多线程是资源共享的,也就<br>是都可以访问同一个内存地址当中的一个变量。例如:若每个线程中对全局变量、<br>静态变量只有读操作,而无写操作,一般来说,这个全局变量是线程安全的:若有多<br>个线程同时执行写操作,一般都需要考虑线程同步,否则就可能影响线程安全。<br><strong>(2)线程之间的死锁</strong><br>为了解决线程之间的安全性引入了Java 的锁机制,而一不小心就会产生Java<br>线程死锁的多线程问题,因为不同的线程都在等待那些根本不可能被释放的锁,从<br>而导致所有的工作都无法完成。假设有两个线程,分别代表两个饥饿的人,他们必<br>须共享刀叉并轮流吃饭。他们都需要获得两个锁:共享刀和共享叉的锁。<br>假如线程A 获得了刀,而线程B 获得了叉。线程A 就会进入阻塞状态来等待<br>获得叉,而线程B 则阻塞来等待线程A 所拥有的刀。这只是人为设计的例子,但尽<br>管在运行时很难探测到,这类情况却时常发生<br><strong>(3)线程太多了会将服务器资源耗尽形成死机当机</strong><br>线程数太多有可能造成系统创建大量线程而导致消耗完系统内存以及CPU<br>的“过渡切换”,造成系统的死机,那么我们该如何解决这类问题呢?<br>某些系统资源是有限的,如文件描述符。多线程程序可能耗尽资源,因为每个<br>线程都可能希望有一个这样的资源。如果线程数相当大,或者某个资源的侯选线<br>程数远远超过了可用的资源数则最好使用资源池。一个最好的示例是数据库连接<br>池。只要线程需要使用一个数据库连接,它就从池中取出一个,使用以后再将它返<br>回池中。资源池也称为资源库。<br>多线程应用开发的注意事项很多。</p>
+<h3 id="Java-程序中怎么保证多线程的运行安全？"><a href="#Java-程序中怎么保证多线程的运行安全？" class="headerlink" title="Java 程序中怎么保证多线程的运行安全？"></a>Java 程序中怎么保证多线程的运行安全？</h3><p><strong>并发编程三要素（线程的安全性问题体现在）：</strong></p>
+<ul>
+<li>原子性：原子，即一个不可再被分割的颗粒。原子性指的是一个或多个操作要么全部执行成功要么全部执行失败。</li>
+<li>可见性：一个线程对共享变量的修改,另一个线程能够立刻看到。（synchronized,volatile）</li>
+<li>有序性：程序执行的顺序按照代码的先后顺序执行。（处理器可能会对指令进行重排序）</li>
+</ul>
+<p><strong>出现线程安全问题的原因：</strong></p>
+<ul>
+<li>线程切换带来的原子性问题</li>
+<li>缓存导致的可见性问题</li>
+<li>编译优化带来的有序性问题</li>
+</ul>
+<p><strong>解决办法：</strong></p>
+<ul>
+<li>JDK Atomic开头的原子类、synchronized、LOCK，可以解决原子性问题</li>
+<li>synchronized、volatile、LOCK，可以解决可见性问题</li>
+<li>Happens-Before 规则可以解决有序性问题</li>
+</ul>
+<h2 id="Java-创建新的执行线程"><a href="#Java-创建新的执行线程" class="headerlink" title="Java 创建新的执行线程"></a>Java 创建新的执行线程</h2><p><img src="/images/thread_2.png" alt="thread"><br>从JDK Thread源码中，可以看到真正创建新的执行线程有两种方法：</p>
+<ul>
+<li>继承 Thread 类：<br>定义一个Thread类的子类，重写run方法，将相关逻辑实现，run()方法就是线程要执行的业务逻辑方法<br>创建自定义的线程子类对象<br>调用子类实例的star()方法来启动线程</li>
+<li>实现Runnable接口：<br>定义Runnable接口实现类MyRunnable，并重写run()方法<br>创建MyRunnable实例myRunnable，以myRunnable作为target创建Thead对象，该Thread对象才是真正的线程对象<br>调用线程对象的start()方法</li>
+</ul>
+<p>除此之外，实际上还有以下方法：</p>
+<ul>
+<li>实现 Callable 接口 （java 5.0 开始提供的创建新线程的方法）<br>创建实现Callable接口的类myCallable<br>以myCallable为参数创建FutureTask对象<br>将FutureTask作为参数创建Thread对象<br>调用线程对象的start()方法  </li>
+</ul>
+<h3 id="runnable-和-callable-的区别？"><a href="#runnable-和-callable-的区别？" class="headerlink" title="runnable 和 callable 的区别？"></a>runnable 和 callable 的区别？</h3><p><strong>相同点</strong></p>
+<ul>
+<li>都是接口</li>
+<li>都可以编写多线程程序</li>
+<li>都采用Thread.start()启动线程</li>
+</ul>
+<p><strong>主要区别</strong></p>
+<ul>
+<li>Runnable 接口 run 方法无返回值；Callable 接口 call 方法有返回值，是个泛型，和Future、FutureTask配合可以用来获取异步执行的结果</li>
+<li>Runnable 接口 run 方法只能抛出运行时异常，且无法捕获处理；Callable 接口 call 方法允许抛出异常，可以获取异常信息  </li>
+</ul>
+<p><em>注：</em> Callalbe接口支持返回执行结果，需要调用FutureTask.get()得到，此方法会阻塞主进程的继续往下执行，如果不调用不会阻塞。</p>
+<h2 id="如何才能让Java的线程安全停止"><a href="#如何才能让Java的线程安全停止" class="headerlink" title="如何才能让Java的线程安全停止"></a>如何才能让Java的线程安全停止</h2><p>暂停、恢复和停止操作对应在线程Thread 的API 就是suspend()、resume()<br>和stop()。但是这些API 是过期的，也就是不建议使用的。不建议使用的原因主<br>要有：以suspend()方法为例，在调用后，线程不会释放已经占有的资源（比如<br>锁），而是占有着资源进入睡眠状态，这样容易引发死锁问题。同样，stop()方<br>法在终结一个线程时不会保证线程的资源正常释放，通常是没有给予线程完成资<br>源释放工作的机会，因此会导致程序可能工作在不确定状态下。</p>
+<p><strong>安全的中止</strong>则是其他线程通过调用某个线程A 的interrupt()方法对其进行中<br>断操作, 中断好比其他线程对该线程打了个招呼，“A，你要中断了”，不代表<br>线程A 会立即停止自己的工作，同样的A 线程完全可以不理会这种中断请求。<br>因为java 里的线程是协作式的，不是抢占式的。线程通过检查自身的中断标志<br>位是否被置为true 来进行响应，<br>线程通过方法isInterrupted()来进行判断是否被中断，也可以调用静态方法<br>Thread.interrupted()来进行判断当前线程是否被中断，不过Thread.interrupted()<br>会同时将中断标识位改写为false。</p>
+<p><em>注意：</em> 处于死锁状态的线程无法被中断</p>
+<h2 id="线程常用方法-和-状态"><a href="#线程常用方法-和-状态" class="headerlink" title="线程常用方法 和 状态"></a>线程常用方法 和 状态</h2><p>[参考]：<a href="https://blog.csdn.net/ThinkWon/article/details/104863992" target="_blank" rel="noopener">https://blog.csdn.net/ThinkWon/article/details/104863992</a></p>
+
+    </div>
+    
+    <div class="reward" ontouchstart>
+    <div class="reward-wrap">赏
+        <div class="reward-box">
+            
+            
+            <span class="reward-type">
+                <img class="wechat" src="../../../../img/reward-wepay.jpg"><b>微信打赏</b>
+            </span>
+            
+        </div>
+    </div>
+    <p class="reward-tip">
+        
+    </p>
+</div>
+    
+    <div class="post-footer">
+        <div>
+            
+            转载声明：
+            商业转载请联系作者获得授权,非商业转载请注明出处 © <a href="" target="_blank">Colin</a>
+            
+            
+        </div>
+        <div>
+            
+        </div>
+    </div>
+</article>
+<div class="article-nav prev-next-wrap clearfix">
+    
+    
+    <a href="/2020/04/07/Kubernetes%20%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/" class="next-post btn btn-default" title='K8S (Kubernetes) 集群搭建'>
+        <span class="hidden-lg">下一篇</span>
+        <span class="hidden-xs">
+            K8S (Kubernetes) 集群搭建</span><i class="fa fa-angle-right fa-fw"></i>
+    </a>
+    
+</div>
+
+<div id="comments">
+    
+
+<div id="vcomments" class="valine"></div>
+
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="/assets/valine.min.js"></script>
+
+<script>
+new Valine({
+    av: AV,
+    el: '#vcomments',
+    appId: 'xOKV9J4UeQAtVkvnJC7Kq2Jn-gzGzoHsz',
+    appKey: 'erIpQac4azoCmgfBB7Dl9maa',
+    placeholder: '说点什么吧',
+    notify: false,
+    verify: true,
+    avatar: 'mm',
+    meta: 'nick,mail'.split(','),
+    pageSize: '10',
+    path: window.location.pathname,
+    lang: 'zh-CN'.toLowerCase()
+})
+</script>
+
+
+</div>
+
+                </main>
+                
+                    <aside id="article-toc" role="navigation" class="col-md-4">
+    <div class="widget">
+        <h3 class="title">
+            文章目录
+        </h3>
+        
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#什么是进程和线程"><span class="toc-text">什么是进程和线程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#进程"><span class="toc-text">进程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#线程"><span class="toc-text">线程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#进程与线程的区别"><span class="toc-text">进程与线程的区别</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#澄清并行和并发"><span class="toc-text">澄清并行和并发</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#并发："><span class="toc-text">并发：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#并行："><span class="toc-text">并行：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#串行："><span class="toc-text">串行：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#并发和并行两者区别："><span class="toc-text">并发和并行两者区别：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#高并发编程的意义、好处和注意事项"><span class="toc-text">高并发编程的意义、好处和注意事项</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#并发编程的缺点："><span class="toc-text">并发编程的缺点：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#多线程程序需要注意事项"><span class="toc-text">多线程程序需要注意事项</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java-程序中怎么保证多线程的运行安全？"><span class="toc-text">Java 程序中怎么保证多线程的运行安全？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Java-创建新的执行线程"><span class="toc-text">Java 创建新的执行线程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#runnable-和-callable-的区别？"><span class="toc-text">runnable 和 callable 的区别？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#如何才能让Java的线程安全停止"><span class="toc-text">如何才能让Java的线程安全停止</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#线程常用方法-和-状态"><span class="toc-text">线程常用方法 和 状态</span></a></li></ol>
+        
+    </div>
+</aside>
+                
+            </div>
+        </div>
+    </section>
+    <footer class="main-footer">
+    <div class="container">
+        <div class="row">
+        </div>
+    </div>
+</footer>
+<a id="back-to-top" class="icon-btn hide">
+    <i class="fa fa-chevron-up"></i>
+</a>
+    <div class="copyright">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="busuanzi">
+    
+    访问量:
+    <strong id="busuanzi_value_site_pv">
+        <i class="fa fa-spinner fa-spin"></i>
+    </strong>
+    &nbsp; | &nbsp;
+    访客数:
+    <strong id="busuanzi_value_site_uv">
+        <i class="fa fa-spinner fa-spin"></i>
+    </strong>
+    
+</div>
+            </div>
+            <div class="col-sm-12">
+                <span>Copyright &copy;
+                    2020
+                    
+                </span> |
+                <span>
+                    Powered by <a href="//hexo.io" class="copyright-links" target="_blank" rel="nofollow">Hexo</a>
+                </span> |
+                <span>
+                    Theme by <a href="//github.com/shenliyang/hexo-theme-snippet.git" class="copyright-links" target="_blank" rel="nofollow">Snippet</a>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+<script src="/js/app.js?rev=@@hash.js"></script>
+
+</body>
+</html>
