@@ -19,10 +19,11 @@
     <link rel="dns-prefetch" href="http://linco.com">
     <!--SEO-->
 
-<meta name="keywords" content="博客" />
+<meta name="keywords" content="博客,Docker" />
 
 
-<meta name="description" content="个人博客" />
+<meta name="description" content="&emsp;&emsp;最近生产环境使用docker部署的selenium chrome-node一直奔溃，无法重启。
+&emsp;&emsp;通过在测试场运行一段时间后，发现docker容器下..." />
 
 
 <meta name="robots" content="all" />
@@ -33,7 +34,7 @@
 
 <title>
     
-    标签: Java并发编程 |
+    Docker容器内部产生过多core.xxx文件导致容器奔溃解决方案[selenium] |
     
     Colin&#39;s Blog
 </title>
@@ -138,175 +139,150 @@
     <section class="content-wrap">
         <div class="container">
             <div class="row">
-                <main class="col-md-8 main-content ">
-                    <ol class="breadcrumb">
-    
-    <li>
-        Java并发编程
-    </li>
-    
-    
-</ol>
-
+                <main class="col-md-8 main-content m-post">
+                    <p id="process"></p>
 <article class="post">
+    <div class="post-head">
+        <h1 id="Docker容器内部产生过多core.xxx文件导致容器奔溃解决方案[selenium]">
+            
+            Docker容器内部产生过多core.xxx文件导致容器奔溃解决方案[selenium]
+            
+        </h1>
+        <div class="post-meta">
     
-    <div class="post-content">
-        <div class="post-head home-post-head">
-            <h1 class="post-title">
-                <a href="/2021/05/16/Java%20%E5%B9%B6%E5%8F%91%E4%B9%8B%20%E7%BA%BF%E7%A8%8B%E5%9F%BA%E7%A1%80%E3%80%81%E7%BA%BF%E7%A8%8B%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B1%E4%BA%AB%E4%B8%8E%E5%8D%8F%E4%BD%9C/">
-                    Java并发 之 线程基础、线程之间的共享与协作 （一）</a>
-            </h1>
-            <div class="post-meta"> &bull;
-                <time class="post-date" datetime="" title="">
-                    2021年05月16日
-                </time>
-            </div>
+    <span class="categories-meta fa-wrap">
+        <i class="fa fa-folder-open-o"></i>
+        <a class="category-link" href="/categories/%E5%90%8E%E7%AB%AF/">后端</a>
+    </span>
+    
+    
+    <span class="fa-wrap">
+        <i class="fa fa-tags"></i>
+        <span class="tags-meta">
+            
+            <a class="tag-link" href="/tags/Docker/" rel="tag">Docker</a> <a class="tag-link" href="/tags/%E5%8D%9A%E5%AE%A2/" rel="tag">博客</a>
+            
+        </span>
+    </span>
+    
+    
+    
+    <span class="fa-wrap">
+        <i class="fa fa-clock-o"></i>
+        <span class="date-meta">
+            2021/05/16</span>
+    </span>
+    
+    <span class="fa-wrap">
+        <i class="fa fa-eye"></i>
+        <span id="busuanzi_value_page_pv"></span>
+    </span>
+    
+    
+</div>
+        
+        
+    </div>
+    
+    <div class="post-body post-content">
+        <p>&emsp;&emsp;最近生产环境使用docker部署的selenium chrome-node一直奔溃，无法重启。</p>
+<p>&emsp;&emsp;通过在测试场运行一段时间后，发现docker容器下主目录不断生成core.xxx文件，而且占用空间相对比较大。于是可以推测生产环境正是因为core.xxx文件过多，导致容器内部空间被占满，因为奔溃。</p>
+<p><img src="/images/core%E6%96%87%E4%BB%B6.png" alt="docker core 1"></p>
+<p>&emsp;&emsp;那么core.xxx到底是什么文件?怎么产生的? 通过搜索发送core.xxx是linux系统在某些程序奔溃退出时生成的内核文件，一般用于调试。具体可以参考此篇文章<a href="https://blog.csdn.net/weixin_42135997/article/details/80732658?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522161948999916780255249001%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=161948999916780255249001&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduend~default-2-80732658.pc_search_result_no_baidu_js&utm_term=linux+core+%E6%96%87%E4%BB%B6" target="_blank" rel="noopener">Linux下core文件及使用</a></p>
+<p>&emsp;&emsp;知道了core.xxx文件的知识，我们就可以通过限制core.xxx的产生来避免问题的产生, 具体有以下解决方案.</p>
+<ul>
+<li><p><strong>方法一</strong>：docker run 命令添加–ulimit core=0参数：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ocker run --<span class="built_in">ulimit</span> core=0 ......</span><br></pre></td></tr></table></figure></li>
+<li><p><strong>方法二</strong>：docker-compose 中通过添加 ulimits 参数限制，如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">chromenode1:</span><br><span class="line">  image: <span class="comment">###</span></span><br><span class="line">  container_name: chromenode1</span><br><span class="line">  restart: always</span><br><span class="line">  ulimits:</span><br><span class="line">    core:</span><br><span class="line">      soft: 0 <span class="comment">#软限制，应用可以随时修改，不能超过硬限制</span></span><br><span class="line">      hard: 0 <span class="comment">#系统硬限制，只能 root 用户提高</span></span><br><span class="line">  ......</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;通过限制core.xxx文件的产生，重新部署后，进入容器内部查看，已经不再有core.xxx文件的产生,问题完美解决。</p>
+</li>
+</ul>
+<p><img src="/images/core%E6%96%87%E4%BB%B62.png" alt="docker core 2"></p>
+
+    </div>
+    
+    <div class="reward" ontouchstart>
+    <div class="reward-wrap">赏
+        <div class="reward-box">
+            
+            
+            <span class="reward-type">
+                <img class="wechat" src="../../../../img/reward-wepay.jpg"><b>微信打赏</b>
+            </span>
+            
         </div>
-        <p class="brief">
+    </div>
+    <p class="reward-tip">
+        
+    </p>
+</div>
+    
+    <div class="post-footer">
+        <div>
             
-            什么是进程和线程进程&amp;emsp;&amp;emsp;进程是程序运行资源分配的最小单位。&amp;emsp;&amp;emsp;进程是一个在内存中运行的应用程序。每个进程都有自己独立的一块内存空间，一个进程可以有多个线程，比如在Windows系统中，一个运行的...
+            转载声明：
+            商业转载请联系作者获得授权,非商业转载请注明出处 © <a href="" target="_blank">Colin</a>
             
-        </p>
+            
+        </div>
+        <div>
+            
+        </div>
     </div>
 </article>
+<div class="article-nav prev-next-wrap clearfix">
+    
+    <a href="/2021/05/16/Docker%E5%AE%B9%E5%99%A8%E5%86%85%E9%83%A8%E5%AE%9E%E7%8E%B0%5B%E7%9C%9F%5D%E5%85%A8%E5%B1%80%E4%BB%A3%E7%90%86/" class="pre-post btn btn-default" title='Docker容器内部实现[真]全局代理'>
+        <i class="fa fa-angle-left fa-fw"></i><span class="hidden-lg">上一篇</span>
+        <span class="hidden-xs">
+            Docker容器内部实现[真]全局代理</span>
+    </a>
+    
+    
+</div>
 
+<div id="comments">
+    
+
+<div id="vcomments" class="valine"></div>
+
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="/assets/valine.min.js"></script>
+
+<script>
+new Valine({
+    av: AV,
+    el: '#vcomments',
+    appId: 'xOKV9J4UeQAtVkvnJC7Kq2Jn-gzGzoHsz',
+    appKey: 'erIpQac4azoCmgfBB7Dl9maa',
+    placeholder: '说点什么吧',
+    notify: false,
+    verify: true,
+    avatar: 'mm',
+    meta: 'nick,mail'.split(','),
+    pageSize: '10',
+    path: window.location.pathname,
+    lang: 'zh-CN'.toLowerCase()
+})
+</script>
+
+
+</div>
 
                 </main>
                 
-                    
-<aside class="col-md-4 sidebar">
-    
-    
-<div class="widget">
-    <h3 class="title">
-        搜索
-    </h3>
-    <div id="search-form">
-        <div id="result-mask" class="hide"></div>
-        <div class="search-area">
-            
-            <input id="search-key" type="search" autocomplete="off" placeholder="搜点什么呢？">
-            <button type="button" class="search-form-submit" id="search-local">
-                站内搜索</button>
-            
-            
-            <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Google Search"><button type="submit" class="search-form-submit">谷歌搜索</button><input type="hidden" name="sitesearch" value="http://linco.com"></form>
-            
-        </div>
-        <div id="result-wrap" class="hide">
-            <div id="search-result"></div>
-        </div>
-        <div class="hide">
-            <template id="search-tpl">
-                <div class="item">
-                    <a href="/{path}" title="{title}">
-                        <div class="title">{title}</div>
-                        <div class="content">{content}</div>
-                    </a>
-                </div>
-            </template>
-        </div>
-    </div>
-</div>
-
-    
-    
-<div class="widget">
-    <h3 class="title">
-        网站公告
-    </h3>
-    <div class="notification">
-        <p>
-    主题下载：<a href="https://github.com/shenliyang/hexo-theme-snippet" title="fork me" target="_blank">Snippet主题</a> <br/>
-    主题使用：<a href="https://github.com/shenliyang/hexo-theme-snippet/blob/master/README.md#常见问题" title="" target="_blank">常见使用问题</a> <br/>
-    支持主题：<a href="https://github.com/shenliyang/hexo-theme-snippet/stargazers" target="_blank" rel="noopener">Star一下</a>
-</p>
-    </div>
-</div>
-
-    
-    
-<div class="widget">
-    <h3 class="title">
-        社交
-    </h3>
-    <div class="content social">
+                    <aside id="article-toc" role="navigation" class="col-md-4">
+    <div class="widget">
+        <h3 class="title">
+            文章目录
+        </h3>
         
-        <a href="//github.com/linco-lin" rel="external nofollow" title="Github" target="_blank">
-            <i class="git fa fa-git"></i>
-        </a>
-        
-        <a href="/" rel="external nofollow" title="邮箱" target="_blank">
-            <i class="envelope-o fa fa-envelope-o"></i>
-        </a>
-        
-        <a href="/" rel="external nofollow" title="联系QQ" target="_blank">
-            <i class="qq fa fa-qq"></i>
-        </a>
-        
-        <a href="/" rel="external nofollow" title="微信" target="_blank">
-            <i class="weixin fa fa-weixin"></i>
-        </a>
-        
-        <a href="/" rel="external nofollow" title="QQ群" target="_blank">
-            <i class="users fa fa-users"></i>
-        </a>
-        
-        <a href="/atom.xml" rel="external nofollow" title="RSS" target="_blank">
-            <i class="feed fa fa-feed"></i>
-        </a>
+        <p>暂无目录</p>
         
     </div>
-</div>
-
-    
-    
-<div class="widget">
-    <h3 class="title">
-        分类
-    </h3>
-    <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/"><i class="fa" aria-hidden="true">Linux</i></a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%89%8D%E7%AB%AF/"><i class="fa" aria-hidden="true">前端</i></a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%90%8E%E7%AB%AF/"><i class="fa" aria-hidden="true">后端</i></a><span class="category-list-count">9</span></li></ul>
-</div>
-
-    
-    
-<div class="widget">
-    <h3 class="title">
-        归档
-    </h3>
-    <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/"><i class="fa" aria-hidden="true">2021年05月</i></a><span class="archive-list-count">12</span></li></ul>
-</div>
-
-    
-    
-<div class="widget">
-    <h3 class="title">
-        标签云
-    </h3>
-    <div class="content tag-cloud">
-        
-        <a href="/tags/Docker/" style="font-size: 16.67px;">Docker</a> <a href="/tags/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" style="font-size: 10px;">Java并发编程</a> <a href="/tags/MyBatis/" style="font-size: 10px;">MyBatis</a> <a href="/tags/%E5%8D%9A%E5%AE%A2/" style="font-size: 20px;">博客</a> <a href="/tags/%E5%90%8E%E7%AB%AF/" style="font-size: 13.33px;">后端</a>
-        
-    </div>
-</div>
-
-    
-    
-<div class="widget">
-    <h3 class="title">
-        友链
-    </h3>
-    <div class="content friends-link">
-        
-        <a href="https://hexo.io/zh-cn/" class="fa" target="_blank">
-            Hexo官网</a>
-        
-    </div>
-</div>
-
-    
 </aside>
-
                 
             </div>
         </div>
@@ -353,10 +329,6 @@
         </div>
     </div>
 </div>
-
-
-<script src="/js/search.js?rev=@@hash.js"></script>
-
 
 
 
